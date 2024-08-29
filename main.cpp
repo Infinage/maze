@@ -51,21 +51,25 @@ void carveMaze(vector<vector<int>> &grid, int M, int N) {
     std::random_device random_dev;
     std::mt19937 generator(random_dev());
 
+    // Directions that we can travel to
+    vector<pair<int, int>> dirs({{-1, 0}, {0, -1}, {1, 0}, {0, 1}});
+
+    // Start by marking the beginning and the destination as free
+    grid[1][1] = 0, grid[M - 2][N - 2] = 0;
+
     stack<pair<int, int>> toVisit({{1, 1}, {M - 2, N - 2}});
-    set<pair<int, int>> visited;
+    set<pair<int, int>> visited({{1, 1}, {M - 2, N - 2}});
     while (!toVisit.empty()) {
+        printMaze(grid, M, N);
         pair<int, int> coord = toVisit.top();
         toVisit.pop();
-        visited.insert(coord);
-        if (checkCoord(grid, M, N, coord)) {
-            grid[coord.first][coord.second] = 0;
-            vector<pair<int, int>> dirs({{-1, 0}, {0, -1}, {1, 0}, {0, 1}});
-            shuffle(dirs.begin(), dirs.end(), generator);
-            for (auto delta: dirs){
-                pair<int, int> next = {coord.first + delta.first, coord.second + delta.second};
-                if (visited.find(next) == visited.end() && checkCoord(grid, M, N, next)) {
-                    toVisit.push(next);
-                }
+        grid[coord.first][coord.second] = 0;
+        shuffle(dirs.begin(), dirs.end(), generator);
+        for (auto delta: dirs){
+            pair<int, int> next = {coord.first + delta.first, coord.second + delta.second};
+            if (visited.find(next) == visited.end() && checkCoord(grid, M, N, next)) {
+                toVisit.push(next);
+                visited.insert(next);
             }
         }
     }
@@ -73,7 +77,7 @@ void carveMaze(vector<vector<int>> &grid, int M, int N) {
 
 int main(){
     int M, N;
-    M = 20, N = 20;
+    M = 5, N = 5;
     vector<vector<int>> grid(M, vector<int>(N, 2));
     carveMaze(grid, M, N);
     printMaze(grid, M, N);
