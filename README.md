@@ -1,6 +1,30 @@
 # Maze Generator and Solver
 
-This project is a comprehensive implementation of various maze generation and solving algorithms. It leverages a range of Data Structures and Algorithms (DSA) concepts, including backtracking, Disjoint Set data structures, and generic programming, to efficiently generate and solve mazes.
+This project is a comprehensive implementation of various maze generation and solving algorithms. It leverages a range of Data Structures and Algorithms (DSA) concepts, including backtracking, Disjoint Set data structures, and generic programming, to efficiently generate and solve mazes. Additionally, the project now includes an interactive gameplay experience, allowing users to select algorithms and dynamically solve the maze during play.
+
+## Sample gameplays
+
+Please note that the actual look and feel of the generated gameplay is could be much better depending on the terminal that you are using. At the moment of writing these images were generated from WSL terminal run and looks downright ugly.
+
+#### Sample maze - 1
+![Sample gameplay 1](./samples/sample1.png)
+
+#### Sample maze - 2
+![Sample gameplay 2](./samples/sample2.png)
+
+#### Interactions during gameplay
+##### Start of the game
+![Generator algorithm](./samples/start1.png)
+![Generator algorithm](./samples/start2.png)
+
+##### Help when stuck
+![Solver algorithm](./samples/help.png)
+
+Gameplay Features
+
+- **Algorithm Selection**: At the start of the game, players can choose the maze generation algorithm from options like Wilson's, Prim's, Kruskal's, etc. Additionally, players can decide if the maze should have multiple paths.
+
+- **Solver Options**: If stuck, players can press H to bring up a menu that allows them to choose a maze-solving algorithm, such as DFS, Dijkstra's, or A\*.
 
 ## Maze Generators
 

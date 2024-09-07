@@ -118,6 +118,9 @@ def main(stdscr: curses.window) -> None:
             CURR = NEXT
             render({CURR, DEST}, mz.COLORS.current.value)
 
+    # Clear all display just the maze and prepare to quit
+    maze.unsolve()
+    display_matrix = maze.board
     render({DEST}, mz.COLORS.empty.value)
     info_window.clear()
     info_window.addstr(0, 0, "Press any key to close.")
