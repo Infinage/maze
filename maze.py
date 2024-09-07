@@ -13,8 +13,9 @@ import math
 import typing
 
 class COLORS(enum.Enum):
-    wall: str = "🧱"
-    visited: str = "🟥"
+    wall: str = "⬛"
+    visited: str = "🟩"
+    current: str = "🟥"
     empty: str = "🟦"
 
     def __str__(self) -> str:
@@ -39,12 +40,10 @@ class Cell:
         return f"{int(self.wall.up)}{int(self.wall.down)}{int(self.wall.left)}{int(self.wall.right)}"
 
 class Maze:
-    def __init__(self, M: int, N: int) -> None:
+    def __init__(self, M: int, N: int, generator_algorithm: str = "wilson", multiple_paths: bool = True) -> None:
         self.M, self.N = M, N
-        self.grid: list[list[Cell]] = [[Cell(i, j) for j in range(N)] for i in range(M)]
-        self.generate()
-        self.add_multiple_paths()
-        # self.solve()
+        self.multiple_paths = multiple_paths
+        self.generate(generator_algorithm)
 
     def break_wall(self, cx: int, cy: int, nx: int, ny: int) -> None:
         # Down
@@ -85,12 +84,30 @@ class Maze:
                 result.append((x_, y_))
         return result
 
-    def generate(self) -> None:
-        # self.generate_DFS_BFS()
-        self.generate_wilson()
-        # self.generate_randomized_kruskal()
-        # self.generate_randomized_prim()
-        # self.generate_ellers()
+    def generate(self, algorithm: str) -> None:
+        """
+        Generate maze based on passed input parameters
+        """
+
+        # Init grid for filling in fresh
+        self.grid: list[list[Cell]] = [[Cell(i, j) for j in range(self.N)] for i in range(self.M)]
+
+        # Generate a maze based on input algorithm
+        if algorithm == "wilson":
+            self.generate_wilson()
+        elif algorithm == "kruskal":
+            self.generate_randomized_kruskal()
+        elif algorithm == "prim":
+            self.generate_randomized_prim()
+        elif algorithm == "ellers":
+            self.generate_ellers()
+        else:
+            self.generate_DFS_BFS()
+
+        # If multiple paths variable is set to true,
+        # modify maze to have multiple solutions
+        if self.multiple_paths:
+            self.add_multiple_paths()
 
     def generate_randomized_prim(self) -> None:
         """
@@ -318,34 +335,48 @@ class Maze:
                 self.break_wall(cx, cy, nx, ny)
                 trials -= 1
 
-    def solve(self) -> None:
-        # self.solve_DFS_BFS()
-        # self.solve_dijkstra()
-        self.solve_a_star()
-        # self.solve_dead_end_filling()
+    def solve(self, algorithm: str, source: tuple[int, int], dest: tuple[int, int]) -> None:
+        """
+        Solve maze based on input algorithm passed
+        By default we assume curr to be the first empty cell and dest to be the last empty cell
+        """
+        if algorithm == "dijkstra":
+            self.solve_dijkstra(source, dest)
+        elif algorithm == "a_star":
+            self.solve_a_star(source, dest)
+        elif algorithm == "dead_end_filling":
+            self.solve_dead_end_filling(source, dest)
+        else:
+            self.solve_DFS_BFS(source, dest)
 
-    def solve_DFS_BFS(self, mode: str = "BFS") -> None:
-        # Source, destination
-        source, destination = self.grid[0][0], self.grid[self.M - 1][self.N - 1]
+    def unsolve(self) -> None:
+        """
+        Removes all visited hints from the grid
+        """
+        for i in range(self.M):
+            for j in range(self.N):
+                self.grid[i][j].visited = False
 
+    def solve_DFS_BFS(self, source: tuple[int, int], destination: tuple[int, int], mode: str = "BFS") -> None:
         # While to_visit not empty keep visiting all unvisited neighbours
         # stopping if we encounter the destination node
-        to_visit: collections.deque[Cell] = collections.deque([source])
-        prev_visited: dict[Cell, Cell] = {source: source}
+        to_visit: collections.deque[tuple[int, int]] = collections.deque([source])
+        prev_visited: dict[tuple[int, int], tuple[int, int]] = {source: source}
         while to_visit:
             curr = to_visit.pop() if mode == "DFS" else to_visit.popleft()
-            if (curr.x, curr.y) == (self.M - 1, self.N - 1):
+            if curr == (self.M - 1, self.N - 1):
                 break
             else:
-                neighbours: list[Cell] = []
-                if not curr.wall.down:
-                    neighbours.append(self.grid[curr.x + 1][curr.y])
-                if not curr.wall.up:
-                    neighbours.append(self.grid[curr.x - 1][curr.y])
-                if not curr.wall.left:
-                    neighbours.append(self.grid[curr.x][curr.y - 1])
-                if not curr.wall.right:
-                    neighbours.append(self.grid[curr.x][curr.y + 1])
+                x, y = curr
+                neighbours: list[tuple[int, int]] = []
+                if not self.grid[x][y].wall.down:
+                    neighbours.append((x + 1, y))
+                if not self.grid[x][y].wall.up:
+                    neighbours.append((x - 1, y))
+                if not self.grid[x][y].wall.left:
+                    neighbours.append((x, y - 1))
+                if not self.grid[x][y].wall.right:
+                    neighbours.append((x + 1, y + 1))
                 for neighbour in neighbours:
                     if neighbour not in prev_visited:
                         to_visit.append(neighbour)
@@ -353,12 +384,13 @@ class Maze:
 
         # Mark the shortest path from destination to source as visited
         curr = destination
-        curr.visited = True
+        x, y = curr
+        self.grid[x][y].visited = True
         while curr != source:
             curr = prev_visited[curr]
-            curr.visited = True
+            self.grid[x][y].visited = True
 
-    def solve_dijkstra(self) -> None:
+    def solve_dijkstra(self, source: tuple[int, int], destination: tuple[int, int]) -> None:
         """
         This algorithm only makes sense when there are multiple paths between source and destination.
         Would still work for unique paths but would function the same as a BFS and would be overkill (slower due to log N ops)
@@ -368,7 +400,6 @@ class Maze:
         Step 3: Iterate through all possible neighbours of curr node that could be visited, add to the heap only if the cost + 1 is lesser than the existing path already discovered.
         Step 4: Repeat until destination is reached.
         """
-        source, destination = (0, 0), (self.M - 1, self.N - 1)
         heap: list[tuple[float, tuple[int, int]]] = [(0, source)]
         distances: collections.defaultdict[tuple[int, int], float] = collections.defaultdict(lambda: math.inf, {source: 0})
         prev_visited: dict[tuple[int, int], tuple[int, int]] = {}
@@ -390,7 +421,7 @@ class Maze:
             cx, cy = prev_visited[(cx, cy)]
             self.grid[cx][cy].visited = True
 
-    def solve_a_star(self) -> None:
+    def solve_a_star(self, source: tuple[int, int], destination: tuple[int, int]) -> None:
         """
         Same as dijkstra but uses a hueristic to find the destination quicker.
         While dijkstra keeps track of just the cost to reach curr from source,
@@ -400,9 +431,6 @@ class Maze:
         Heuristic = approximation
         Video explanation: https://www.youtube.com/watch?v=ySN5Wnu88nE (computerphile)
         """
-
-        source, destination = (0, 0), (self.M - 1, self.N - 1)
-
         # Using manhattan distance for heuristic calculation (H value)
         dist: typing.Callable[[tuple[int, int], tuple[int, int]], float] = lambda x, y: abs(x[0] - y[0]) + abs(x[1] - y[1])
 
@@ -428,7 +456,7 @@ class Maze:
             cx, cy = prev_visited[(cx, cy)]
             self.grid[cx][cy].visited = True
 
-    def solve_dead_end_filling(self) -> None:
+    def solve_dead_end_filling(self, source: tuple[int, int], destination: tuple[int, int]) -> None:
         """"
         Step 1. Identify Dead-Ends:
            - Traverse through the maze grid and identify all cells that are dead-ends.
@@ -519,4 +547,5 @@ class Maze:
 
 if __name__ == "__main__":
     maze = Maze(20, 15)
+    maze.solve("a_star", (0, 0), (maze.M - 1, maze.N - 1))
     maze.print()
