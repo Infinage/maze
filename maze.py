@@ -44,7 +44,7 @@ class Maze:
         self.grid: list[list[Cell]] = [[Cell(i, j) for j in range(N)] for i in range(M)]
         self.generate()
         self.add_multiple_paths()
-        self.solve()
+        # self.solve()
 
     def break_wall(self, cx: int, cy: int, nx: int, ny: int) -> None:
         # Down
@@ -86,8 +86,8 @@ class Maze:
         return result
 
     def generate(self) -> None:
-        self.generate_DFS_BFS()
-        # self.generate_wilson()
+        # self.generate_DFS_BFS()
+        self.generate_wilson()
         # self.generate_randomized_kruskal()
         # self.generate_randomized_prim()
         # self.generate_ellers()
@@ -321,8 +321,8 @@ class Maze:
     def solve(self) -> None:
         # self.solve_DFS_BFS()
         # self.solve_dijkstra()
-        # self.solve_a_star()
-        self.solve_dead_end_filling()
+        self.solve_a_star()
+        # self.solve_dead_end_filling()
 
     def solve_DFS_BFS(self, mode: str = "BFS") -> None:
         # Source, destination
@@ -469,18 +469,20 @@ class Maze:
                 if (i, j) not in non_path:
                     self.grid[i][j].visited = True
 
-    def print(self) -> None:
+    @property
+    def board(self) -> list[list[str]]:
         """
-        Logic to print the maze to the screen
+        Logic to convert the maze into a more print friendly version
         """
+        results: list[list[str]] = [[]]
         for i in range(2 * self.M + 1):
             for j in range(2 * self.N + 1):
                 # If both are even, definitely wall
                 if i % 2 == 0 and j % 2 == 0:
-                    print(COLORS.wall, end="")
+                    results[-1].append(COLORS.wall.value)
                 # If both are odd definitely free cell
                 elif i % 2 == 1 and j % 2 == 1:
-                    print(COLORS.visited if self.grid[i // 2][j // 2].visited else COLORS.empty, end="")
+                    results[-1].append(COLORS.visited.value if self.grid[i // 2][j // 2].visited else COLORS.empty.value)
                 else:
                     # Horizontal wall
                     if i % 2 == 0:
@@ -488,19 +490,33 @@ class Maze:
                         upper_cell_lower_wall = self.grid[lx][ly].wall.down if 0 <= lx < self.M else True
                         lower_cell_upper_wall = self.grid[ux][uy].wall.up if 0 <= ux < self.M else True
                         assert upper_cell_lower_wall == lower_cell_upper_wall, "walls not updated correctly"
-                        print(COLORS.wall if upper_cell_lower_wall else COLORS.visited if self.grid[lx][ly].visited and self.grid[ux][uy].visited else COLORS.empty, end="")
+                        results[-1].append(COLORS.wall.value if upper_cell_lower_wall else COLORS.visited.value if self.grid[lx][ly].visited and self.grid[ux][uy].visited else COLORS.empty.value)
                     # Vertical wall
                     else:
                         (rx, ry), (lx, ly) = (i // 2, (j + 1) // 2), (i // 2, (j - 1) // 2)
                         right_cell_left_wall = self.grid[rx][ry].wall.left if 0 <= ry < self.N else True
                         left_cell_right_wall = self.grid[lx][ly].wall.right if 0 <= ly < self.N else True
                         assert right_cell_left_wall == left_cell_right_wall, "walls not updated correctly"
-                        print(COLORS.wall if right_cell_left_wall else COLORS.visited if self.grid[lx][ly].visited and self.grid[rx][ry].visited else COLORS.empty, end="")
-            print()
+                        results[-1].append(COLORS.wall.value if right_cell_left_wall else COLORS.visited.value if self.grid[lx][ly].visited and self.grid[rx][ry].visited else COLORS.empty.value)
+            results.append([])
 
+        # Remove the last empty list we would have added
+        results.pop()
+
+        return results
+
+    def print(self) -> None:
+        """
+        Logic to print the maze to the console
+        """
+        display_matrix: list[list[str]] = self.board
+        for i in range(len(display_matrix)):
+            for j in range(len(display_matrix[0])):
+                print(display_matrix[i][j], end="")
+            print()
 
 # +++++++++++++++++ MAIN FUNCTION +++++++++++++++++ #
 
 if __name__ == "__main__":
-    maze = Maze(10, 10)
+    maze = Maze(20, 15)
     maze.print()
