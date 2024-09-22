@@ -20,6 +20,10 @@ Please note that the actual look and feel of the generated gameplay is could be 
 ##### Help when stuck
 ![Solver algorithm](./samples/help.png)
 
+##### Gameplay sample
+
+![Sample Gameplay](./samples/sample.gif)
+
 Gameplay Features
 
 - **Algorithm Selection**: At the start of the game, players can choose the maze generation algorithm from options like Wilson's, Prim's, Kruskal's, etc. Additionally, players can decide if the maze should have multiple paths.
