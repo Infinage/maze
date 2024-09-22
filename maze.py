@@ -13,10 +13,17 @@ import math
 import typing
 
 class COLORS(enum.Enum):
-    wall: str = "⬛"
+    wall: str = "🟫"
     visited: str = "🟩"
     current: str = "🟥"
     empty: str = "🟦"
+
+    """
+    wall: str = "#"
+    visited: str = "."
+    current: str = "@"
+    empty: str = " "
+    """
 
     def __str__(self) -> str:
         return self.value

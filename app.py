@@ -1,6 +1,7 @@
 import argparse
 import curses
 import maze as mz
+import wcwidth
 
 def main(stdscr: curses.window) -> None:
 
@@ -8,10 +9,12 @@ def main(stdscr: curses.window) -> None:
         """
         Helper to render the board to screen
         """
-        main_window.clear()
         for i in range(X):
+            x_offset = 0
             for j in range(Y):
-                main_window.addstr(i, j, display_matrix[i][j] if (i, j) not in spl_cells else color)
+                char = display_matrix[i][j] if (i, j) not in spl_cells else color
+                main_window.addstr(i, x_offset, char)
+                x_offset += wcwidth.wcswidth(char)
         main_window.refresh()
 
     def display_overlay(screen: curses.window, options: list[str], prompt: str) -> str:
@@ -42,7 +45,7 @@ def main(stdscr: curses.window) -> None:
         multiple_paths = display_overlay(main_window, allow_multiple_paths_option, "Allow multiple paths?")
 
         # Initialize the maze based on the selected algorithm and path option
-        maze = mz.Maze(int((ROWS - PADDING_Y) * .45), int((COLS - PADDING_X) * .25), generator_algorithm=maze_gen_algorithm, multiple_paths=(multiple_paths == "Yes"))
+        maze = mz.Maze(int((ROWS - PADDING_Y) * .48), int((COLS - PADDING_X) * .24), generator_algorithm=maze_gen_algorithm, multiple_paths=(multiple_paths == "Yes"))
         return maze
 
     def toggle_solution(solved: bool):
